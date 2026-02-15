@@ -1,0 +1,18 @@
+{
+  "short_name": "KasirPro",
+  "name": "Kasir & Stok UMKM Pro (Apple Standard)",
+  "description": "Sistem POS Detail & Manajemen Stok Offline",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/5632/5632217.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": "./index.html",
+  "background_color": "#F2F2F7",
+  "theme_color": "#004D40",
+  "display": "standalone",
+  "orientation": "portrait",
+  "scope": "/"
+}
