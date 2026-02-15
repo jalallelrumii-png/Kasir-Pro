@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Kasir Pro UMKM</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        [x-cloak] { display: none !important; }
+        body { background-color: #F2F2F7; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+        .ios-card { background: white; border-radius: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .tab-active { color: #004D40; font-weight: 800; }
+        .emerald-premium { background-color: #004D40; }
+        input, select { border-radius: 12px; background: #F2F2F7; border: none; padding: 12px; }
+        .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
+    </style>
+</head>
+<body x-data="posSystem()" x-init="initData()" class="antialiased select-none">
+
+    <header class="emerald-premium text-white pt-12 pb-6 px-6 shadow-md rounded-b-[40px]">
+        <div class="flex justify-between items-end">
+            <div>
+                <h1 class="text-2xl font-black tracking-tight" x-text="tab === 'jual' ? 'Kasir Kas' : 'Manajemen Stok'"></h1>
+                <p class="text-xs opacity-60 font-bold uppercase tracking-widest">Sistem Terenkripsi Offline</p>
+            </div>
+            <div class="text-right">
+                <span class="text-[10px] bg-white/20 px-2 py-1 rounded-full font-bold">MODE NATIVE v1.0</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="p-4 mb-32">
+        
+        <div x-show="tab === 'jual'" x-transition x-cloak class="space-y-6">
+            <div class="grid grid-cols-2 gap-4">
+                <template x-for="item in products" :key="item.id">
+                    <button @click="addToCart(item)" 
+                            :disabled="item.stok <= 0"
+                            class="ios-card p-5 flex flex-col items-center relative transition-transform active:scale-90"
+                            :class="item.stok <= 0 ? 'opacity-30' : ''">
+                        <div class="absolute top-2 right-3 text-[9px] font-bold px-2 py-1 rounded-full bg-gray-100 text-gray-600" x-text="'Sisa: ' + item.stok"></div>
+                        <span class="text-4xl my-2" x-text="item.icon"></span>
+                        <span class="font-bold text-gray-800 text-sm leading-tight" x-text="item.nama"></span>
+                        <span class="text-emerald-800 font-black text-xs mt-1" x-text="formatIDR(item.harga)"></span>
+                    </button>
+                </template>
+            </div>
+        </div>
+
+        <div x-show="tab === 'stok'" x-transition x-cloak class="space-y-6">
+            <div class="ios-card p-6 border-2 border-dashed border-gray-200">
+                <h3 class="font-black text-gray-800 mb-4 flex items-center gap-2">
+                    <span class="bg-emerald-100 p-2 rounded-lg">➕</span> Tambah Barang Baru
+                </h3>
+                <div class="space-y-3">
+                    <input type="text" x-model="newProduct.nama" placeholder="Nama Barang (Contoh: Beras Raja)" class="w-full text-sm">
+                    <div class="grid grid-cols-2 gap-2">
+                        <input type="number" x-model="newProduct.harga" placeholder="Harga Jual" class="w-full text-sm">
+                        <input type="number" x-model="newProduct.stok" placeholder="Jumlah Stok" class="w-full text-sm">
+                    </div>
+                    <select x-model="newProduct.icon" class="w-full text-sm">
+                        <option value="📦">Pilih Ikon</option>
+                        <option value="🌾">Beras/Pangan</option>
+                        <option value="🧪">Minyak/Cair</option>
+                        <option value="🍬">Snack/Gula</option>
+                        <option value="🚬">Rokok</option>
+                        <option value="🥤">Minuman</option>
+                    </select>
+                    <button @click="addProduct()" class="w-full emerald-premium text-white py-4 rounded-2xl font-bold shadow-lg">SIMPAN KE DATABASE</button>
+                </div>
+            </div>
+
+            <div class="space-y-3">
+                <h3 class="font-black text-gray-800 px-2">Daftar Inventaris</h3>
+                <template x-for="(item, index) in products" :key="item.id">
+                    <div class="ios-card p-4 flex justify-between items-center border border-gray-50">
+                        <div class="flex items-center gap-4">
+                            <span class="text-3xl" x-text="item.icon"></span>
+                            <div>
+                                <p class="font-black text-gray-800 leading-none mb-1" x-text="item.nama"></p>
+                                <p class="text-xs text-gray-400 font-bold" x-text="formatIDR(item.harga)"></p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2 bg-gray-100 p-1.5 rounded-2xl">
+                            <button @click="updateStock(index, -1)" class="w-10 h-10 bg-white rounded-xl shadow-sm font-black text-red-500">-</button>
+                            <span class="w-8 text-center font-black" x-text="item.stok"></span>
+                            <button @click="updateStock(index, 1)" class="w-10 h-10 bg-white rounded-xl shadow-sm font-black text-emerald-600">+</button>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </div>
+    </main>
+
+    <div x-show="cart.length > 0 && tab === 'jual'" 
+         x-transition:enter="transition transform duration-300"
+         x-transition:enter-start="translate-y-full"
+         class="fixed bottom-24 inset-x-4 z-40">
+        <div class="ios-card p-6 bg-white/95 backdrop-blur shadow-2xl border border-white">
+            <div class="flex justify-between items-end mb-4">
+                <div>
+                    <p class="text-[10px] font-black text-emerald-800/50 uppercase">Total Transaksi</p>
+                    <h2 class="text-3xl font-black text-gray-900" x-text="formatIDR(totalPrice())"></h2>
+                </div>
+                <button @click="cart = []" class="text-xs font-bold text-red-500 bg-red-50 px-3 py-2 rounded-xl">Batal</button>
+            </div>
+            <button @click="checkout()" class="w-full emerald-premium py-5 rounded-[22px] text-white font-black text-lg shadow-xl flex items-center justify-center gap-3 active:scale-95 transition-all">
+                <span>SELESAIKAN & NOTA WA</span>
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.277l-.582 2.128 2.185-.573c.948.517 1.947.887 3.148.887 3.181 0 5.767-2.586 5.767-5.766 0-3.18-2.587-5.766-5.768-5.766zm3.29 8.205c-.144.405-.833.748-1.15.79-.317.042-.628.073-1.742-.352-1.428-.544-2.35-1.993-2.422-2.09-.072-.097-.582-.77-.582-1.47 0-.7.364-1.045.495-1.187.13-.142.286-.178.382-.178h.271c.088 0 .208.003.3.22.096.228.328.796.356.853.028.058.046.126.008.202-.038.076-.058.123-.115.19-.058.067-.121.148-.174.204-.058.062-.12.13-.052.247.069.117.306.504.656.816.45.402.83.527.948.587.118.06.188.05.257-.03.07-.08.297-.348.376-.467.079-.118.158-.098.267-.058.109.039.689.325.808.384.12.059.2.088.229.138.03.05.03.286-.113.691z"/></svg>
+            </button>
+        </div>
+    </div>
+
+    <nav class="fixed bottom-0 inset-x-0 bg-white/80 backdrop-blur-md border-t border-gray-200 safe-bottom z-50">
+        <div class="flex justify-around items-center h-20 px-6">
+            <button @click="tab = 'jual'" class="flex flex-col items-center gap-1 transition-all" :class="tab === 'jual' ? 'tab-active' : 'text-gray-400'">
+                <span class="text-2xl">💰</span>
+                <span class="text-[10px] font-bold">KASIR</span>
+            </button>
+            <button @click="tab = 'stok'" class="flex flex-col items-center gap-1 transition-all" :class="tab === 'stok' ? 'tab-active' : 'text-gray-400'">
+                <span class="text-2xl">📦</span>
+                <span class="text-[10px] font-bold">STOK</span>
+            </button>
+        </div>
+    </nav>
+
+    <script>
+        function posSystem() {
+            return {
+                tab: 'jual',
+                cart: [],
+                products: [],
+                newProduct: { nama: '', harga: '', stok: '', icon: '📦' },
+
+                initData() {
+                    const saved = localStorage.getItem('APPLE_POS_DB');
+                    if (saved) {
+                        this.products = JSON.parse(saved);
+                    } else {
+                        // Data awal jika kosong
+                        this.products = [
+                            { id: 1, nama: 'Beras Super 1kg', harga: 16000, stok: 10, icon: '🌾' },
+                            { id: 2, nama: 'Minyak Premium 1L', harga: 19000, stok: 5, icon: '🧪' }
+                        ];
+                        this.save();
+                    }
+                },
+
+                save() {
+                    localStorage.setItem('APPLE_POS_DB', JSON.stringify(this.products));
+                },
+
+                addProduct() {
+                    if (!this.newProduct.nama || !this.newProduct.harga) return alert('Lengkapi Nama & Harga!');
+                    const newItem = {
+                        id: Date.now(),
+                        nama: this.newProduct.nama,
+                        harga: parseInt(this.newProduct.harga),
+                        stok: parseInt(this.newProduct.stok || 0),
+                        icon: this.newProduct.icon
+                    };
+                    this.products.unshift(newItem);
+                    this.newProduct = { nama: '', harga: '', stok: '', icon: '📦' };
+                    this.save();
+                    alert('Barang Berhasil Ditambah!');
+                },
+
+                updateStock(idx, val) {
+                    this.products[idx].stok = Math.max(0, this.products[idx].stok + val);
+                    this.save();
+                },
+
+                addToCart(item) {
+                    const target = this.products.find(p => p.id === item.id);
+                    if (target.stok > 0) {
+                        this.cart.push({...item});
+                        target.stok--;
+                        this.save();
+                        if (navigator.vibrate) navigator.vibrate(40);
+                    }
+                },
+
+                totalPrice() {
+                    return this.cart.reduce((sum, item) => sum + item.harga, 0);
+                },
+
+                formatIDR(num) {
+                    return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(num);
+                },
+
+                checkout() {
+                    let summary = `*STRUK DIGITAL - TOKO ANDA*\n---------------------------\n`;
+                    const itemsCount = {};
+                    this.cart.forEach(x => itemsCount[x.nama] = (itemsCount[x.nama] || 0) + 1);
+                    
+                    Object.keys(itemsCount).forEach(name => {
+                        const p = this.cart.find(x => x.nama === name);
+                        summary += `${name} (x${itemsCount[name]}) : ${this.formatIDR(p.harga * itemsCount[name])}\n`;
+                    });
+
+                    summary += `---------------------------\n*TOTAL: ${this.formatIDR(this.totalPrice())}*\n\nTerima kasih!`;
+                    
+                    window.open(`https://wa.me/?text=${encodeURIComponent(summary)}`, '_blank');
+                    this.cart = [];
+                    alert('Transaksi Selesai!');
+                }
+            }
+        }
+
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('./sw.js');
+        }
+    </script>
+</body>
+</html>
+
